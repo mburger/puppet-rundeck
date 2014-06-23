@@ -1,112 +1,180 @@
-class rundeck::config (
-  $rd_admin_user,
-  $rd_admin_pass,
-  $db_user,
-  $db_pass,
-  $db_server,
-  $db_port,
-  $db_name,
-  $db_url_params,
-  $xms,
-  $xmx,
-  $rd_base,
-  $rd_url,
-  $aide,
-) inherits rundeck::params {
-  
-  $login_module_name  = $rundeck::params::login_module_name
-  $login_config       = $rundeck::params::login_config
-  $realm_property     = $rundeck::params::realm_property
-  $framework_property = $rundeck::params::framework_property
-  $project_property   = $rundeck::params::project_property
-  $rd_config_property = $rundeck::params::rd_config_property
-  $log4j_property     = $rundeck::params::log4j_property
-  $rd_user            = $rundeck::params::rd_user
-  $rd_group           = $rundeck::params::rd_group
-  $rd_home            = $rundeck::params::rd_home
-  $rd_dirs            = $rundeck::params::rd_dirs
+# Class: rundeck::config
+#
+# This class manages rundeck configuration
+#
+# == Variables
+#
+# Refer to rundeck class for the variables defined here.
+#
+# == Usage
+#
+# This class is not intended to be used directly.
+# It's automatically included by rundeck
+#
+class rundeck::config {
 
-  $rd_admin_pass_hash = md5($rd_admin_pass)
-
-  file { $rd_dirs:
-    ensure => directory,
-    owner  => $rd_user,
-    group  => $rd_group,
+  file { 'rundeck.conf':
+    ensure  => $rundeck::manage_file,
+    path    => $rundeck::config_file,
+    mode    => $rundeck::config_file_mode,
+    owner   => $rundeck::config_file_owner,
+    group   => $rundeck::config_file_group,
+    notify  => $rundeck::manage_service_autorestart,
+    source  => $rundeck::manage_file_source,
+    content => $rundeck::manage_file_content,
+    replace => $rundeck::manage_file_replace,
+    audit   => $rundeck::manage_audit,
+    noop    => $rundeck::noops,
   }
 
-  file { "$rd_home":
-    ensure  => directory,
-    owner   => $rd_user,
-    group   => $rd_group,
-    recurse => true,
-    purge   => true,
-    source  => 'puppet:///modules/rundeck/conf'
-  }
-
-  file { "${rd_home}/profile":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template('rundeck/profile.erb'),
-  }
-  
-  file { "${rd_home}/${login_config}":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template("rundeck/${login_config}.erb"),
-   }
-
-  file { "${rd_home}/${realm_property}":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template("rundeck/${realm_property}.erb"),
-  }
-
-  file { "${rd_home}/${framework_property}":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template("rundeck/${framework_property}.erb"),
-  }
-   
-  file { "${rd_home}/${project_property}":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template("rundeck/${project_property}.erb"),
-  }
-   
-  file { "${rd_home}/${rd_config_property}":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template("rundeck/${rd_config_property}.erb"),
-  }
-   
-  file { "${rd_home}/${log4j_property}":
-    ensure  => file,
-    owner   => 'root',
-    group   => $rd_group,
-    mode    => '0440',
-    content => template("rundeck/${log4j_property}.erb"),
-  }
-   
-   
-   
-  if $aide {
-    aide::directive { "exclude_rundeck_${rd_base}_logs":
-      content => "!${rd_base}/logs"
+  if ($rundeck::config_file_admin_aclpolicy_source or $rundeck::config_file_admin_aclpolicy_template) {
+    file { 'rundeck.admin.aclpolicy':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_admin_aclpolicy,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_admin_aclpolicy_source,
+      content => $rundeck::manage_config_file_admin_aclpolicy_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
     }
-    aide::directive { "exclude_rundeck_${rd_base}_tmp":
-      content => "!${rd_base}/tmp"
+  }
+
+  if ($rundeck::config_file_apitoken_aclpolicy_source or $rundeck::config_file_apitoken_aclpolicy_template) {
+    file { 'rundeck.apitoken.aclpolicy':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_apitoken_aclpolicy,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_apitoken_aclpolicy_source,
+      content => $rundeck::manage_config_file_apitoken_aclpolicy_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_framework_properties_source or $rundeck::config_file_framework_properties_template) {
+    file { 'rundeck.framework.properties':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_framework_properties,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_framework_properties_source,
+      content => $rundeck::manage_config_file_framework_properties_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_jaas_loginmodule_conf_source or $rundeck::config_file_jaas_loginmodule_conf_template) {
+    file { 'rundeck.jaas-loginmodule.conf':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_jaas_loginmodule_conf,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_jaas_loginmodule_conf_source,
+      content => $rundeck::manage_config_file_jaas_loginmodule_conf_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_log4j_properties_source or $rundeck::config_file_log4j_properties_template) {
+    file { 'rundeck.log4j.properties':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_log4j_properties,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_log4j_properties_source,
+      content => $rundeck::manage_config_file_log4j_properties_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_profile_source or $rundeck::config_file_profile_template) {
+    file { 'rundeck.profile':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_profile,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_profile_source,
+      content => $rundeck::manage_config_file_profile_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_project_properties_source or $rundeck::config_file_project_properties_template) {
+    file { 'rundeck.project.properties':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_project_properties,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_project_properties_source,
+      content => $rundeck::manage_config_file_project_properties_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_realm_properties_source or $rundeck::config_file_realm_properties_template) {
+    file { 'rundeck.realm.properties':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_realm_properties,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_realm_properties_source,
+      content => $rundeck::manage_config_file_realm_properties_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  if ($rundeck::config_file_ssl_properties_source or $rundeck::config_file_ssl_properties_template) {
+    file { 'rundeck.ssl.properties':
+      ensure  => $rundeck::manage_file,
+      path    => $rundeck::config_file_ssl_properties,
+      mode    => $rundeck::config_file_mode,
+      owner   => $rundeck::config_file_owner,
+      group   => $rundeck::config_file_group,
+      source  => $rundeck::manage_config_file_ssl_properties_source,
+      content => $rundeck::manage_config_file_ssl_properties_template,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
+    }
+  }
+
+  # The whole rundeck configuration directory can be recursively overriden
+  if $rundeck::source_dir {
+    file { 'rundeck.dir':
+      ensure  => directory,
+      path    => $rundeck::config_dir,
+      notify  => $rundeck::manage_service_autorestart,
+      source  => $rundeck::source_dir,
+      recurse => true,
+      purge   => $rundeck::bool_source_dir_purge,
+      force   => $rundeck::bool_source_dir_purge,
+      replace => $rundeck::manage_file_replace,
+      audit   => $rundeck::manage_audit,
+      noop    => $rundeck::noops,
     }
   }
 }
